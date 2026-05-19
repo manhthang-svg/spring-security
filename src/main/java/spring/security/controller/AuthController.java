@@ -1,5 +1,6 @@
 package spring.security.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,6 +14,7 @@ import spring.security.repository.UserRepository;
 
 @RestController
 @RequestMapping("/auth")
+@Slf4j
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -24,9 +26,14 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<?>> login (@RequestBody LoginRequest req){
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest req){
+
         Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getUsername(),req.getPassword()));
+                new UsernamePasswordAuthenticationToken(
+                        req.getUsername(),
+                        req.getPassword()
+                ));
+
         return ResponseEntity.ok(ApiResponse.success(auth));
     }
     @PostMapping("/register")
