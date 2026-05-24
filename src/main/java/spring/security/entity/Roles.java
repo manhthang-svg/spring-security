@@ -10,7 +10,8 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-public class Role extends AbstractEntity{
+@Table(name = "roles")
+public class Roles extends AbstractEntity{
     @Column(nullable = false,unique = true,length = 50)
     private String name;
 
@@ -19,9 +20,9 @@ public class Role extends AbstractEntity{
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "role_permission",
+            name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
-    private Set<Permission> permissions = new HashSet<>();
+    private Set<Permissions> permissions = new HashSet<>();
 }

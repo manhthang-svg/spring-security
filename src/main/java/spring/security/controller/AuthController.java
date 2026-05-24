@@ -1,48 +1,29 @@
 package spring.security.controller;
 
-import lombok.extern.slf4j.Slf4j;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import spring.security.dto.request.LoginRequest;
+import spring.security.dto.request.RegisterRequest;
 import spring.security.dto.response.ApiResponse;
-import spring.security.entity.Users;
-import spring.security.repository.UserRepository;
+import spring.security.dto.response.UserResponse;
+import spring.security.service.AuthService;
 
 @RestController
 @RequestMapping("/auth")
-@Slf4j
+@RequiredArgsConstructor
 public class AuthController {
-    private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest req){
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody @Valid LoginRequest req){
 
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        req.getUsername(),
-                        req.getPassword()
-                ));
-
-        return ResponseEntity.ok(ApiResponse.success(auth));
+        return ResponseEntity.ok(ApiResponse.success(authService.login(req)));
     }
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register (@RequestBody LoginRequest req){
-        Users users = Users.builder()
-                .username(req.getUsername())
-                .password(passwordEncoder.encode(req.getPassword()))
-                .build();
-        userRepository.save(users);
-        return ResponseEntity.ok(ApiResponse.success("Register success"));
+    public ResponseEntity<ApiResponse<UserResponse>> register (@RequestBody @Valid RegisterRequest req){
+
+        return ResponseEntity.ok(ApiResponse.success(authService.register(req)));
     }
 }
