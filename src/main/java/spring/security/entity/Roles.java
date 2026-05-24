@@ -11,6 +11,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class Role extends AbstractEntity{
+    @Column(nullable = false,unique = true,length = 50)
     private String name;
 
     @ManyToMany(mappedBy = "roles")
