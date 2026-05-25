@@ -1,9 +1,6 @@
 package spring.security.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +15,6 @@ public class Permissions extends AbstractEntity{
     @Column(nullable = false,unique = true)
     private String name;
     private String description;
-    @ManyToMany(mappedBy = "permissions")
+    @ManyToMany(mappedBy = "permissions",fetch = FetchType.LAZY)
     private Set<Roles> roles = new HashSet<>();
 }

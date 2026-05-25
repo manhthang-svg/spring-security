@@ -26,7 +26,7 @@ public class Users extends AbstractEntity{
     @Column(nullable = false)
     private String password;
     //@Builder.Default // neu khong co cai nay thi gia tri mac dinh khi su dung builder se bi bypass
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
