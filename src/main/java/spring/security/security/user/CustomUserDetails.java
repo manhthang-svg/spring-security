@@ -18,6 +18,14 @@ public class CustomUserDetails implements UserDetails {
         this.users = users;
     }
 
+    /**
+     * Trả về {@link Users} entity gốc — dùng cho {@code AuditorAware}
+     * để điền {@code createdBy} / {@code updatedBy} tự động.
+     */
+    public Users getUser() {
+        return users;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
