@@ -26,7 +26,7 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
-    String [] PUBLIC_ENDPOINTS = {
+    private static String [] PUBLIC_ENDPOINTS = {
             "/auth/**",
 
     };

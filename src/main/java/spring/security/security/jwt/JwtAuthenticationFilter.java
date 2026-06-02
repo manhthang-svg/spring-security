@@ -1,10 +1,12 @@
 package spring.security.security.jwt;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils JwtUtils; // Class tự viết để mã hóa/giải mã JWT
@@ -42,7 +45,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 2. Giải mã lấy username và kiểm tra tính hợp lệ của token
         String username = JwtUtils.extractUsername(jwt);
+        try{
 
+        }catch (JwtException | IllegalArgumentException e){
+            log.warn("Invalid JWT token: {}", e.getMessage());
+        }
         // SecurityContextHolder.getContext().getAuthentication() == null nghĩa là 
         // User này chưa từng được xác thực trong request hiện tại
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

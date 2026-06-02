@@ -1,5 +1,6 @@
 package spring.security.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -10,13 +11,15 @@ import java.util.List;
 
 @Configuration
 public class CorsConfig {
+    @Value("${CORS_ALLOWED_ORIGIN}")
+    private List<String> allowedOrigins;
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 🔹 Cho phép các Origin (Domain của Frontend) nào được phép gọi API
         // Trong môi trường dev, thường là localhost của React (3000) hoặc Vite (5173)
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+        configuration.setAllowedOrigins(allowedOrigins);
 
         // 🔹 Cho phép các phương thức HTTP nào
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
