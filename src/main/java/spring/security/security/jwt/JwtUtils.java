@@ -35,15 +35,15 @@ public class JwtUtils {
     }
 
     // 3. Tạo Token mới chỉ từ thông tin UserDetails (Khi đăng nhập thành công)
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateToken(String username) {
+        return generateToken(new HashMap<>(), username);
     }
 
     // 4. Tạo Token nâng cao (Có thể nhét thêm thông tin tùy chỉnh như Email, ID vào extraClaims)
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(Map<String, Object> extraClaims, String username) {
         return Jwts.builder()
                 .claims(extraClaims)
-                .subject(userDetails.getUsername())
+                .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSignInKey()) // Ký bằng khóa bí mật
