@@ -5,17 +5,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.security.dto.request.LoginRequest;
 import spring.security.dto.request.RegisterRequest;
-import spring.security.dto.response.PermissionResponse;
-import spring.security.dto.response.RoleResponse;
 import spring.security.dto.response.TokenResponse;
 import spring.security.dto.response.UserResponse;
 import spring.security.entity.RefreshToken;
@@ -101,7 +97,8 @@ public class AuthServiceImpl implements AuthService {
 
     return userMapper.toUserResponse(users);
     }
-    public  TokenResponse refreshToken(HttpServletRequest request) {
+    @Override
+    public TokenResponse getNewRefreshToken(HttpServletRequest request) {
         // 1. Lấy Refresh Token từ Cookie
         String tokenFromCookie = refreshTokenService.getRefreshTokenFromCookie(request);
 
@@ -112,9 +109,9 @@ public class AuthServiceImpl implements AuthService {
                 .map(user -> {
                     // 3. Nếu hợp lệ, cấp Access Token mới
                     String newAccessToken = jwtUtils.generateToken(user.getUsername());
-                    return ResponseEntity.ok(new TokenResponse(newAccessToken));
+                    return new TokenResponse(newAccessToken);
                 })
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
     }
 }
-}
+
