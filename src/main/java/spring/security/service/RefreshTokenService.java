@@ -17,6 +17,4 @@ public interface RefreshTokenService {
 
     RefreshToken verifyExpiration(RefreshToken token);
 
-    @Transactional
-    void deleteByUserId(Long userId);
 }

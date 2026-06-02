@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.security.entity.RefreshToken;
+import spring.security.entity.Users;
 import spring.security.enums.ErrorCode;
 import spring.security.exceptions.AppException;
 import spring.security.repository.RefreshTokenRepository;
@@ -29,8 +30,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     @Transactional
     public RefreshToken generateRefreshToken(Long id){
+        Users users = userRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_FOUND));
+        refreshTokenRepository.deleteById(id);
         RefreshToken refreshToken = RefreshToken.builder()
-                .users(userRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_FOUND)))
+                .users(users)
                 .token(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().plusMillis(refreshTokenExpiration))
                 .build();
@@ -61,12 +64,5 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             throw new AppException(ErrorCode.REFRESTOKEN_EXPIRED);
         }
         return token;
-    }
-    @Transactional
-    @Override
-    public void deleteByUserId(Long userId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            refreshTokenRepository.deleteByUsers(user);
-        });
     }
 }
