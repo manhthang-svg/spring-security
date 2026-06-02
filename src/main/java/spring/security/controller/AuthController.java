@@ -1,5 +1,6 @@
 package spring.security.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<?>> login(@RequestBody @Valid LoginRequest req){
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody @Valid LoginRequest req, HttpServletResponse response){
 
-        return ResponseEntity.ok(ApiResponse.success(authService.login(req)));
+        return ResponseEntity.ok(ApiResponse.success(authService.login(req,response)));
     }
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponse>> register (@RequestBody @Valid RegisterRequest req){
