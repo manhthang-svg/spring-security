@@ -14,4 +14,9 @@ public interface AuthService {
     UserResponse register(RegisterRequest request);
 
     TokenResponse getNewRefreshToken(HttpServletRequest request);
+
+    /**
+     * Revoke refresh token trong DB và clear HttpOnly cookie phía client.
+     */
+    void logout(HttpServletRequest request, HttpServletResponse response);
 }

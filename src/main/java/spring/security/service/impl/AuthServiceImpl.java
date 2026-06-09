@@ -113,5 +113,29 @@ public class AuthServiceImpl implements AuthService {
                 })
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
     }
+
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        // 1. Lấy refresh token từ HttpOnly Cookie
+        String tokenValue = refreshTokenService.getRefreshTokenFromCookie(request);
+
+        // 2. Nếu có token → xóa khỏi DB để revoke session
+        if (tokenValue != null) {
+            refreshTokenService.deleteByToken(tokenValue);
+        }
+
+        // 3. Xóa cookie phía client bằng cách set maxAge = 0
+        //    (Phải giữ nguyên path/domain để browser nhận diện đúng cookie cần xóa)
+        ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false) // khớp với lúc tạo cookie (đổi true khi production HTTPS)
+                .path("/api/auth/refresh")
+                .maxAge(0)     // ← maxAge = 0 → browser xóa cookie ngay lập tức
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, clearCookie.toString());
+        log.info("User logged out, refresh token revoked.");
+    }
 }
 
