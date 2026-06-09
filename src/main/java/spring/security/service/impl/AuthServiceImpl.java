@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
                 .httpOnly(true)
                 .secure(false) // Đổi thành true nếu chạy HTTPS thực tế
-                .path("/api/auth/refresh") // Chỉ gửi cookie này khi gọi đúng endpoint refresh
+                .path("/auth/refresh-token") // Chỉ gửi cookie này khi gọi đúng endpoint refresh
                 .maxAge(7 * 24 * 60 * 60) // 7 ngày
                 .sameSite("Strict")
                 .build();
