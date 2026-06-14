@@ -100,18 +100,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponse getNewRefreshToken(HttpServletRequest request) {
         // 1. Lấy Refresh Token từ Cookie
-        String tokenFromCookie = refreshTokenService.getRefreshTokenFromCookie(request);
-
-        // 2. Kiểm tra tính hợp lệ trong DB
-        return refreshTokenService.findByToken(tokenFromCookie)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUsers)
-                .map(user -> {
-                    // 3. Nếu hợp lệ, cấp Access Token mới
-                    String newAccessToken = jwtUtils.generateToken(user.getUsername());
-                    return new TokenResponse(newAccessToken);
-                })
-                .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
+        String oldToken = refreshTokenService.getRefreshTokenFromCookie(request);
+        // 2. Tìm token trong db + check ton tai , han su dung
+        RefreshToken refreshTokenIndb = refreshTokenService.findByToken(oldToken).orElseThrow(()-> new AppException(ErrorCode.REFRESHTOKEN_NOT_FOUND));
+        refreshTokenService.verifyExpiration(refreshTokenIndb);
+        // 3. Xóa token cũ
+        refreshTokenService.deleteTokenByToken(oldToken);
+        // 4. Tạo access token mới
+    return null;
     }
 }
 
