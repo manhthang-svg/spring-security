@@ -73,11 +73,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return token;
     }
 
-    /**
-     * Xóa refresh token khỏi DB theo giá trị token.
-     * Được gọi trong logout để revoke session ngay lập tức.
-     */
-    @Transactional
     @Override
     public void deleteByToken(String token) {
         refreshTokenRepository.deleteByToken(token);

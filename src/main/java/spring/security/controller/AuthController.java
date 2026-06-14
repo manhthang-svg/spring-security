@@ -31,10 +31,9 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<?>> refreshToken(HttpServletRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(authService.getNewRefreshToken(request)));
+    public ResponseEntity<ApiResponse<?>> refreshToken(HttpServletRequest request,HttpServletResponse response) {
+        return ResponseEntity.ok(ApiResponse.success(authService.getNewRefreshToken(request, response)));
     }
-
     /**
      * Logout: revoke refresh token trong DB + clear HttpOnly cookie phía client.
      * Yêu cầu Access Token hợp lệ trong Authorization header.

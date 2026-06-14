@@ -28,6 +28,7 @@ import spring.security.service.AuthService;
 import org.springframework.security.core.GrantedAuthority;
 import spring.security.service.RefreshTokenService;
 
+import java.sql.Ref;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -98,20 +99,31 @@ public class AuthServiceImpl implements AuthService {
     return userMapper.toUserResponse(users);
     }
     @Override
-    public TokenResponse getNewRefreshToken(HttpServletRequest request) {
+    public TokenResponse getNewRefreshToken(HttpServletRequest request,HttpServletResponse response) {
         // 1. Lấy Refresh Token từ Cookie
-        String tokenFromCookie = refreshTokenService.getRefreshTokenFromCookie(request);
+        String oldToken = refreshTokenService.getRefreshTokenFromCookie(request);
+        // 2. Tìm token trong db + check ton tai , han su dung
+        RefreshToken refreshTokenIndb = refreshTokenService.findByToken(oldToken).orElseThrow(()-> new AppException(ErrorCode.REFRESHTOKEN_NOT_FOUND));
+        refreshTokenService.verifyExpiration(refreshTokenIndb);
+        // 3. Xóa token cũ
+        refreshTokenService.deleteByToken(oldToken);
+        // 4. Tạo access,refresh token mới
+        Users users = refreshTokenIndb.getUsers();
+        var claims = jwtUtils.getClaims(users.getUsername());
+        String newAccessToken = jwtUtils.generateToken(claims,users.getUsername());
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(users.getId());
+        // 4. Set cookie mới
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+                .httpOnly(true)
+                .secure(false) // Đổi thành true nếu chạy HTTPS thực tế
+                .path("/api/auth/refresh") // Chỉ gửi cookie này khi gọi đúng endpoint refresh
+                .maxAge(7 * 24 * 60 * 60) // 7 ngày
+                .sameSite("Strict")
+                .build();
 
-        // 2. Kiểm tra tính hợp lệ trong DB
-        return refreshTokenService.findByToken(tokenFromCookie)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUsers)
-                .map(user -> {
-                    // 3. Nếu hợp lệ, cấp Access Token mới
-                    String newAccessToken = jwtUtils.generateToken(user.getUsername());
-                    return new TokenResponse(newAccessToken);
-                })
-                .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return new TokenResponse(newAccessToken);
     }
 
     @Override
