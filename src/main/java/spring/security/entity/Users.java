@@ -34,12 +34,5 @@ public class Users extends AbstractEntity{
     )
     private Set<Roles> roles = new HashSet<>();
 
-    @Override
-    public String toString() {
-        return "Users{" +
-                "username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", roles=" + roles +
-                '}';
-    }
+
 }
