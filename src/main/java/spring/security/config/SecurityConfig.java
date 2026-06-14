@@ -26,9 +26,10 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
-    String [] PUBLIC_ENDPOINTS = {
-            "/auth/**",
-
+    private static String [] PUBLIC_ENDPOINTS = {
+            "/auth/login",
+            "/auth/register",
+            "/auth/refresh-token",
     };
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

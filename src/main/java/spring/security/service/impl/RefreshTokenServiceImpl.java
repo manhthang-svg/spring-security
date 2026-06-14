@@ -3,6 +3,7 @@ package spring.security.service.impl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.security.entity.RefreshToken;
@@ -23,17 +24,23 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private Long refreshTokenExpiration;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    public RefreshTokenServiceImpl(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public RefreshTokenServiceImpl(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     @Override
     @Transactional
-    public RefreshToken generateRefreshToken(Long id){
-        Users users = userRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_FOUND));
-        refreshTokenRepository.deleteById(id);
+    public RefreshToken generateRefreshToken(Long id) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Xóa token cũ trước khi cấp mới → tránh token accumulation
+        refreshTokenRepository.deleteByUsers(user);
+
         RefreshToken refreshToken = RefreshToken.builder()
-                .users(users)
+                .users(user)
                 .token(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().plusMillis(refreshTokenExpiration))
                 .build();
@@ -65,8 +72,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
         return token;
     }
+
     @Override
-    public void deleteTokenByToken(String refreshToken){
-        refreshTokenRepository.deleteByToken(refreshToken);
+    public void deleteByToken(String token) {
+        refreshTokenRepository.deleteByToken(token);
     }
 }

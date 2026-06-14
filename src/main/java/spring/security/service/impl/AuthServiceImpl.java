@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
                 .httpOnly(true)
                 .secure(false) // Đổi thành true nếu chạy HTTPS thực tế
-                .path("/api/auth/refresh") // Chỉ gửi cookie này khi gọi đúng endpoint refresh
+                .path("/auth/refresh-token") // Chỉ gửi cookie này khi gọi đúng endpoint refresh
                 .maxAge(7 * 24 * 60 * 60) // 7 ngày
                 .sameSite("Strict")
                 .build();
@@ -106,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken refreshTokenIndb = refreshTokenService.findByToken(oldToken).orElseThrow(()-> new AppException(ErrorCode.REFRESHTOKEN_NOT_FOUND));
         refreshTokenService.verifyExpiration(refreshTokenIndb);
         // 3. Xóa token cũ
-        refreshTokenService.deleteTokenByToken(oldToken);
+        refreshTokenService.deleteByToken(oldToken);
         // 4. Tạo access,refresh token mới
         Users users = refreshTokenIndb.getUsers();
         var claims = jwtUtils.getClaims(users.getUsername());
@@ -124,6 +124,30 @@ public class AuthServiceImpl implements AuthService {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return new TokenResponse(newAccessToken);
+    }
+
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        // 1. Lấy refresh token từ HttpOnly Cookie
+        String tokenValue = refreshTokenService.getRefreshTokenFromCookie(request);
+
+        // 2. Nếu có token → xóa khỏi DB để revoke session
+        if (tokenValue != null) {
+            refreshTokenService.deleteByToken(tokenValue);
+        }
+
+        // 3. Xóa cookie phía client bằng cách set maxAge = 0
+        //    (Phải giữ nguyên path/domain để browser nhận diện đúng cookie cần xóa)
+        ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false) // khớp với lúc tạo cookie (đổi true khi production HTTPS)
+                .path("/api/auth/refresh")
+                .maxAge(0)     // ← maxAge = 0 → browser xóa cookie ngay lập tức
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, clearCookie.toString());
+        log.info("User logged out, refresh token revoked.");
     }
 }
 

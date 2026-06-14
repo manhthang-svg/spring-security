@@ -34,5 +34,4 @@ public class Users extends AbstractEntity{
     )
     private Set<Roles> roles = new HashSet<>();
 
-
 }
