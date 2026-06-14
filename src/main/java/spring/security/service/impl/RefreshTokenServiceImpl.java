@@ -3,6 +3,7 @@ package spring.security.service.impl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.security.entity.RefreshToken;
@@ -23,9 +24,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private Long refreshTokenExpiration;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    public RefreshTokenServiceImpl(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public RefreshTokenServiceImpl(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     @Override
     @Transactional

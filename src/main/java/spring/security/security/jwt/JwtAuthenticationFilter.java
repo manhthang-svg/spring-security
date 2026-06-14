@@ -44,37 +44,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // 2. Giải mã lấy username và kiểm tra tính hợp lệ của token
-        String username = JwtUtils.extractUsername(jwt);
+
         try{
+            String username = JwtUtils.extractUsername(jwt);
+
+            // SecurityContextHolder.getContext().getAuthentication() == null nghĩa là
+            // User này chưa từng được xác thực trong request hiện tại
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                // 3. Lấy thông tin chi tiết của User cùng chùm chìa khóa Roles/Permissions từ DB lên
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+
+                // Kiểm tra xem token có khớp với thông tin user và chưa hết hạn không
+                if (JwtUtils.isTokenValid(jwt, userDetails)) {
+
+                    // 4. Tạo "Thẻ chứng nhận đăng nhập thành công"
+                    // Quan trọng nhất: Truyền userDetails.getAuthorities() vào đối số thứ 3 để nạp quyền
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
+                    // Gắn thêm thông tin về request (IP, Session...) vào token bảo mật
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // CHÍNH THỨC xác thực thành công: Đút thẻ chứng nhận vào Ngữ cảnh bảo mật của Spring
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
 
         }catch (JwtException | IllegalArgumentException e){
             log.warn("Invalid JWT token: {}", e.getMessage());
         }
-        // SecurityContextHolder.getContext().getAuthentication() == null nghĩa là 
-        // User này chưa từng được xác thực trong request hiện tại
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // 3. Lấy thông tin chi tiết của User cùng chùm chìa khóa Roles/Permissions từ DB lên
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
-            // Kiểm tra xem token có khớp với thông tin user và chưa hết hạn không
-            if (JwtUtils.isTokenValid(jwt, userDetails)) {
-
-                // 4. Tạo "Thẻ chứng nhận đăng nhập thành công" 
-                // Quan trọng nhất: Truyền userDetails.getAuthorities() vào đối số thứ 3 để nạp quyền
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-
-                // Gắn thêm thông tin về request (IP, Session...) vào token bảo mật
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // CHÍNH THỨC xác thực thành công: Đút thẻ chứng nhận vào Ngữ cảnh bảo mật của Spring
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
-        }
 
         // Chuyển giao request cho bộ lọc tiếp theo trong chuỗi FilterChain
         filterChain.doFilter(request, response);
