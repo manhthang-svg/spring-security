@@ -13,5 +13,5 @@ public interface AuthService {
 
     UserResponse register(RegisterRequest request);
 
-    TokenResponse getNewRefreshToken(HttpServletRequest request);
+    TokenResponse getNewRefreshToken(HttpServletRequest request,HttpServletResponse response);
 }

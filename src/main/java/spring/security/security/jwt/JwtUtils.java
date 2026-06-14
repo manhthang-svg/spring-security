@@ -92,7 +92,7 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private Map<String, Object> getClaims (String username){
+    public Map<String, Object> getClaims (String username){
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
         Map<String, Object> extraClaims = new HashMap<>();
         List<String> authorities = userDetails.getAuthorities().stream()
