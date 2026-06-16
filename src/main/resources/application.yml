@@ -11,5 +11,16 @@ spring:
                 format_sql: true
         show-sql: false
     profiles:
-        active: local
+        default: local
 
+springdoc:
+    api-docs:
+        enabled: true
+        path: /v3/api-docs
+    swagger-ui:
+        enabled: true
+        path: /swagger-ui.html
+        disable-swagger-default-url: true
+        display-request-duration: true
+        operations-sorter: method
+        tags-sorter: alpha
