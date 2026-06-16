@@ -63,6 +63,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
         return null;
     }
+    @Transactional
     @Override
     public RefreshToken verifyExpiration(RefreshToken token) {
         // Nếu thời gian hết hạn nhỏ hơn thời gian hiện tại -> Token đã chết

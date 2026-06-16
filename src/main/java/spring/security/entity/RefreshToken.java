@@ -11,7 +11,7 @@ import java.time.Instant;
 @Builder
 @Getter
 @Setter
-public class RefreshToken {
+public class RefreshToken extends AbstractEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

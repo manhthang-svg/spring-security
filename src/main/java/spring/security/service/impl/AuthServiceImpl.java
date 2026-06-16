@@ -3,6 +3,7 @@ package spring.security.service.impl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,6 +43,13 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final RefreshTokenService refreshTokenService;
+    @Value("${app.cookie.secure}")
+    private boolean cookieSecure;
+
+    public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+    public static final String REFRESH_TOKEN_COOKIE_PATH = "/api/auth/refresh-token";
+    public static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
+
     public AuthServiceImpl(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, UserMapper userMapper, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
@@ -66,11 +74,11 @@ public class AuthServiceImpl implements AuthService {
         String jwt = jwtUtils.generateToken(extraClaims,userDetails.getUsername());
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(userDetails.getUser().getId());
         // 4. Đưa Refresh Token vào HttpOnly Cookie để bảo mật chống XSS
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken.getToken())
                 .httpOnly(true)
-                .secure(false) // Đổi thành true nếu chạy HTTPS thực tế
-                .path("/auth/refresh-token") // Chỉ gửi cookie này khi gọi đúng endpoint refresh
-                .maxAge(7 * 24 * 60 * 60) // 7 ngày
+                .secure(cookieSecure) // Đổi thành true nếu chạy HTTPS thực tế
+                .path(REFRESH_TOKEN_COOKIE_PATH) // Chỉ gửi cookie này khi gọi đúng endpoint refresh
+                .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE) // 7 ngày
                 .sameSite("Strict")
                 .build();
 
@@ -113,11 +121,11 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = jwtUtils.generateToken(claims,users.getUsername());
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(users.getId());
         // 4. Set cookie mới
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken.getToken())
                 .httpOnly(true)
-                .secure(false) // Đổi thành true nếu chạy HTTPS thực tế
-                .path("/api/auth/refresh") // Chỉ gửi cookie này khi gọi đúng endpoint refresh
-                .maxAge(7 * 24 * 60 * 60) // 7 ngày
+                .secure(cookieSecure) // Đổi thành true nếu chạy HTTPS thực tế
+                .path(REFRESH_TOKEN_COOKIE_PATH) // Chỉ gửi cookie này khi gọi đúng endpoint refresh
+                .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE) // 7 ngày
                 .sameSite("Strict")
                 .build();
 
@@ -138,10 +146,10 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. Xóa cookie phía client bằng cách set maxAge = 0
         //    (Phải giữ nguyên path/domain để browser nhận diện đúng cookie cần xóa)
-        ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+        ResponseCookie clearCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(false) // khớp với lúc tạo cookie (đổi true khi production HTTPS)
-                .path("/api/auth/refresh")
+                .secure(cookieSecure) // khớp với lúc tạo cookie (đổi true khi production HTTPS)
+                .path(REFRESH_TOKEN_COOKIE_PATH)
                 .maxAge(0)     // ← maxAge = 0 → browser xóa cookie ngay lập tức
                 .sameSite("Strict")
                 .build();
