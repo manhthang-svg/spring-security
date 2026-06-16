@@ -12,9 +12,6 @@ import java.time.Instant;
 @Getter
 @Setter
 public class RefreshToken extends AbstractEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     @Column(nullable = false,unique = true)
     private String token;
     @OneToOne(fetch = FetchType.LAZY)
