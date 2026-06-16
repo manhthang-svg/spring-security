@@ -28,12 +28,6 @@ public class JwtUtils {
     @Value("${security.jwt.expiration}")
     private long jwtExpiration;
 
-    private final CustomUserDetailsService customUserDetailsService;
-
-    public JwtUtils(CustomUserDetailsService customUserDetailsService) {
-        this.customUserDetailsService = customUserDetailsService;
-    }
-
     // 1. Lấy Username từ JWT Token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -90,16 +84,6 @@ public class JwtUtils {
     private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public Map<String, Object> getClaims (String username){
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-        Map<String, Object> extraClaims = new HashMap<>();
-        List<String> authorities = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-        extraClaims.put("authorities", authorities);
-        return extraClaims;
     }
 
 }
