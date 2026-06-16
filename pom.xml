@@ -91,6 +91,13 @@
 			<version>${org.mapstruct.version}</version>
 		</dependency>
 
+		<!-- Swagger / OpenAPI -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+
 		<!-- Testing Starters -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
