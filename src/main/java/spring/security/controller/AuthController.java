@@ -13,7 +13,7 @@ import spring.security.dto.response.UserResponse;
 import spring.security.service.AuthService;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
