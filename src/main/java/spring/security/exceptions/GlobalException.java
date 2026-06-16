@@ -1,5 +1,6 @@
 package spring.security.exceptions;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +14,7 @@ import spring.security.enums.ErrorCode;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalException {
 
     // 1. Bắt chính xác quả bom Custom 'AppException' do chúng ta tự ném ra
@@ -34,7 +36,7 @@ public class GlobalException {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUncategorizedException(Exception exception) {
         ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;
-
+        log.error("Uncategorized exception: ", exception);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
