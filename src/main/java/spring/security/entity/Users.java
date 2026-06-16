@@ -33,5 +33,14 @@ public class Users extends AbstractEntity{
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Roles> roles = new HashSet<>();
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean enabled = true;
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean accountLocked = false;
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean accountExpired = false;
 
 }
