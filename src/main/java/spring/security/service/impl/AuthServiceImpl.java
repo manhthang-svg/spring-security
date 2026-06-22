@@ -9,6 +9,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.security.dto.request.LoginRequest;
@@ -25,9 +26,11 @@ import spring.security.repository.RoleRepository;
 import spring.security.repository.UserRepository;
 import spring.security.security.jwt.JwtUtils;
 import spring.security.security.user.CustomUserDetails;
+import spring.security.security.user.CustomUserDetailsService;
 import spring.security.service.AuthService;
 import org.springframework.security.core.GrantedAuthority;
 import spring.security.service.RefreshTokenService;
+import utils.CookieUtils;
 
 import java.sql.Ref;
 import java.util.*;
@@ -43,14 +46,9 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final RefreshTokenService refreshTokenService;
-    @Value("${app.cookie.secure}")
-    private boolean cookieSecure;
-
-    public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    public static final String REFRESH_TOKEN_COOKIE_PATH = "/api/auth/refresh-token";
-    public static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
-
-    public AuthServiceImpl(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, UserMapper userMapper, RefreshTokenService refreshTokenService) {
+    private final CustomUserDetailsService customUserDetailsService;
+    private final CookieUtils cookieUtils;
+    public AuthServiceImpl(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, UserMapper userMapper, RefreshTokenService refreshTokenService, CustomUserDetailsService customUserDetailsService, CookieUtils cookieUtils) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userRepository = userRepository;
@@ -58,6 +56,8 @@ public class AuthServiceImpl implements AuthService {
         this.roleRepository = roleRepository;
         this.userMapper = userMapper;
         this.refreshTokenService = refreshTokenService;
+        this.customUserDetailsService = customUserDetailsService;
+        this.cookieUtils = cookieUtils;
     }
     @Override
     public TokenResponse login(LoginRequest loginRequest, HttpServletResponse response){
@@ -75,13 +75,7 @@ public class AuthServiceImpl implements AuthService {
         String jwt = jwtUtils.generateToken(extraClaims,userDetails.getUsername());
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(userDetails.getUser().getId());
         // 4. Đưa Refresh Token vào HttpOnly Cookie để bảo mật chống XSS
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken.getToken())
-                .httpOnly(true)
-                .secure(cookieSecure) // Đổi thành true nếu chạy HTTPS thực tế
-                .path(REFRESH_TOKEN_COOKIE_PATH) // Chỉ gửi cookie này khi gọi đúng endpoint refresh
-                .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE) // 7 ngày
-                .sameSite("Strict")
-                .build();
+        ResponseCookie cookie = cookieUtils.buildRefreshTokenCookie(refreshToken.getToken());
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         log.info("[Login] successfully login for username = '{}'",loginRequest.getUsername());
@@ -123,17 +117,11 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenService.deleteByToken(oldToken);
         // 4. Tạo access,refresh token mới
         Users users = refreshTokenIndb.getUsers();
-        var claims = jwtUtils.getClaims(users.getUsername());
+        var claims = getClaims(users.getUsername());
         String newAccessToken = jwtUtils.generateToken(claims,users.getUsername());
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(users.getId());
         // 4. Set cookie mới
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken.getToken())
-                .httpOnly(true)
-                .secure(cookieSecure) // Đổi thành true nếu chạy HTTPS thực tế
-                .path(REFRESH_TOKEN_COOKIE_PATH) // Chỉ gửi cookie này khi gọi đúng endpoint refresh
-                .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE) // 7 ngày
-                .sameSite("Strict")
-                .build();
+        ResponseCookie cookie = cookieUtils.buildRefreshTokenCookie(refreshToken.getToken());
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -152,16 +140,19 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. Xóa cookie phía client bằng cách set maxAge = 0
         //    (Phải giữ nguyên path/domain để browser nhận diện đúng cookie cần xóa)
-        ResponseCookie clearCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
-                .httpOnly(true)
-                .secure(cookieSecure) // khớp với lúc tạo cookie (đổi true khi production HTTPS)
-                .path(REFRESH_TOKEN_COOKIE_PATH)
-                .maxAge(0)     // ← maxAge = 0 → browser xóa cookie ngay lập tức
-                .sameSite("Strict")
-                .build();
-
+        ResponseCookie clearCookie = cookieUtils.clearRefreshTokenCookie();
         response.addHeader(HttpHeaders.SET_COOKIE, clearCookie.toString());
         log.info("User logged out, refresh token revoked.");
+    }
+
+    public Map<String, Object> getClaims (String username){
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+        Map<String, Object> extraClaims = new HashMap<>();
+        List<String> authorities = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+        extraClaims.put("authorities", authorities);
+        return extraClaims;
     }
 }
 

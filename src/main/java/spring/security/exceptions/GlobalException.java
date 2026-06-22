@@ -37,7 +37,9 @@ public class GlobalException {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUncategorizedException(Exception exception) {
         ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;
+
         log.error("[SYSTEM ERROR] Uncategorized exception caught: {}", exception.getMessage(), exception);
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
