@@ -1,4 +1,4 @@
-package utils;
+package spring.security.utils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -15,7 +15,7 @@ public class CookieUtils {
     public static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
     public ResponseCookie buildRefreshTokenCookie(String value){
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, value)
                 .httpOnly(true)
                 .secure(cookieSecure) // Đổi thành true nếu chạy HTTPS thực tế
                 .path(REFRESH_TOKEN_COOKIE_PATH) // Chỉ gửi cookie này khi gọi đúng endpoint refresh
