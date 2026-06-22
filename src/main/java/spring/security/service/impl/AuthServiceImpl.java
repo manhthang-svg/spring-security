@@ -61,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
     }
     @Override
     public TokenResponse login(LoginRequest loginRequest, HttpServletResponse response){
+        log.info("[LOGIN] attemping login for user = '{}' ",loginRequest.getUsername());
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 loginRequest.getUsername(),loginRequest.getPassword()
         ));
@@ -77,15 +78,20 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie cookie = cookieUtils.buildRefreshTokenCookie(refreshToken.getToken());
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        log.info("[Login] successfully login for username = '{}'",loginRequest.getUsername());
         return new TokenResponse(jwt);
     }
     @Override
     public UserResponse register(RegisterRequest request){
+        log.info("[REGISTER] attemping register for username ='{}'",request.getUsername());
         if(userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
 
         Roles userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.error("[REGISTER] CRITICAL: Role 'USER' not found in database. Check migration V2.");
+                    return new AppException(ErrorCode.ROLE_NOT_FOUND);
+                });
 
         Set<Roles> roles = new HashSet<>();
         roles.add(userRole);
@@ -97,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userRepository.save(users);
-
+        log.info("[REGISTER] Successfully registered username='{}'", request.getUsername());
     return userMapper.toUserResponse(users);
     }
     @Override
