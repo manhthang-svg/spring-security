@@ -47,8 +47,8 @@ Trả accessToken mới về FE
 - note :
   +, we should only put @Mappedby in the inverseside if we need to inverse access
   +, example : we need to know user from refreshtoken but dont need to know refresh token from user
-
-
+- in a transaction , the insert command always be processed at first, regardless the delete command placed before insert command, at thís point the delete command will be púh to a queue. If you want to force delete command run , you must use repository.flush,ex : refreshRepository.flush directly below the delete command
+- delete command always need @Transactional at service, otherwise, spring will warn entitymanager blabla
 
 
 
