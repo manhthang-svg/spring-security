@@ -36,14 +36,15 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // Xóa token cũ trước khi cấp mới → tránh token accumulation
-        refreshTokenRepository.deleteByUsers(user);
+        // Mỗi user chỉ có một refresh token. Cập nhật bản ghi hiện có
+        // thay vì xóa rồi insert để không va vào unique constraint user_id.
+        RefreshToken refreshToken = refreshTokenRepository.findByUsers(user)
+                .orElseGet(() -> RefreshToken.builder()
+                        .users(user)
+                        .build());
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .users(user)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(refreshTokenExpiration))
-                .build();
+        refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenExpiration));
 
         return refreshTokenRepository.save(refreshToken);
     }
@@ -74,6 +75,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return token;
     }
 
+    @Transactional
     @Override
     public void deleteByToken(String token) {
         refreshTokenRepository.deleteByToken(token);

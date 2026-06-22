@@ -30,7 +30,7 @@ import spring.security.security.user.CustomUserDetailsService;
 import spring.security.service.AuthService;
 import org.springframework.security.core.GrantedAuthority;
 import spring.security.service.RefreshTokenService;
-import utils.CookieUtils;
+import spring.security.utils.CookieUtils;
 
 import java.sql.Ref;
 import java.util.*;
