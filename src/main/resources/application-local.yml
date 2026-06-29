@@ -8,7 +8,7 @@ spring:
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         password: aA@12345
-        url: jdbc:mysql://localhost:3306/security_practice?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+        url: jdbc:mysql://localhost:3306/{DB_NAME}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
         username: root
 app:
     cookie:
