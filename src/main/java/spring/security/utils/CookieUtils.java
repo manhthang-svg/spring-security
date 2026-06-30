@@ -1,7 +1,6 @@
 package spring.security.utils;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -11,28 +10,26 @@ public class CookieUtils {
     private boolean cookieSecure;
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    public static final String REFRESH_TOKEN_COOKIE_PATH = "/api/auth/refresh-token";
+    public static final String REFRESH_TOKEN_COOKIE_PATH = "/api/auth";
     public static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
-    public ResponseCookie buildRefreshTokenCookie(String value){
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, value)
+    public ResponseCookie buildRefreshTokenCookie(String value) {
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, value)
                 .httpOnly(true)
-                .secure(cookieSecure) // Đổi thành true nếu chạy HTTPS thực tế
-                .path(REFRESH_TOKEN_COOKIE_PATH) // Chỉ gửi cookie này khi gọi đúng endpoint refresh
-                .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE) // 7 ngày
+                .secure(cookieSecure)
+                .path(REFRESH_TOKEN_COOKIE_PATH)
+                .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE)
                 .sameSite("Strict")
                 .build();
-    return cookie;
     }
 
-    public  ResponseCookie clearRefreshTokenCookie(){
-        ResponseCookie clearCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+    public ResponseCookie clearRefreshTokenCookie() {
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(cookieSecure) // khớp với lúc tạo cookie (đổi true khi production HTTPS)
+                .secure(cookieSecure)
                 .path(REFRESH_TOKEN_COOKIE_PATH)
-                .maxAge(0)     // ← maxAge = 0 → browser xóa cookie ngay lập tức
+                .maxAge(0)
                 .sameSite("Strict")
                 .build();
-        return clearCookie;
     }
 }

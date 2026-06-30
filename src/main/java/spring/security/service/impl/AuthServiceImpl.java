@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.security.dto.request.LoginRequest;
 import spring.security.dto.request.RegisterRequest;
 import spring.security.dto.response.TokenResponse;
@@ -106,6 +107,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("[REGISTER] Successfully registered username='{}'", request.getUsername());
     return userMapper.toUserResponse(users);
     }
+    @Transactional
     @Override
     public TokenResponse getNewRefreshToken(HttpServletRequest request,HttpServletResponse response) {
         // 1. Lấy Refresh Token từ Cookie
