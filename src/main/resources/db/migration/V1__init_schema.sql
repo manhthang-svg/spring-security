@@ -7,6 +7,7 @@
 --   - permissions
 --   - user_roles
 --   - role_permissions
+--   - refresh_token
 --
 -- AbstractEntity:
 --   id
@@ -26,6 +27,9 @@ CREATE TABLE users (
 
                        username VARCHAR(100) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
+                       enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                       account_locked BOOLEAN NOT NULL DEFAULT FALSE,
+                       account_expired BOOLEAN NOT NULL DEFAULT FALSE,
 
     -- Audit fields
                        created_by_id BIGINT NULL,
@@ -194,3 +198,97 @@ CREATE INDEX idx_permissions_created_by
 CREATE INDEX idx_permissions_updated_by
     ON permissions(updated_by_id);
 
+-- =============================================================================
+-- REFRESH_TOKEN
+-- =============================================================================
+CREATE TABLE refresh_token (
+                               id BIGINT NOT NULL AUTO_INCREMENT,
+
+                               token VARCHAR(255) NOT NULL UNIQUE,
+                               user_id BIGINT NOT NULL UNIQUE,
+                               expiry_date TIMESTAMP NOT NULL,
+
+    -- Audit fields
+                               created_by_id BIGINT NULL,
+                               updated_by_id BIGINT NULL,
+
+                               created_at TIMESTAMP
+                                   NOT NULL
+                                                        DEFAULT CURRENT_TIMESTAMP,
+
+                               updated_at TIMESTAMP
+                                   NOT NULL
+                                                        DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP,
+
+                               deleted BOOLEAN NOT NULL DEFAULT FALSE,
+
+                               version BIGINT DEFAULT 0,
+
+                               PRIMARY KEY (id),
+
+                               CONSTRAINT fk_refresh_token_user
+                                   FOREIGN KEY (user_id)
+                                       REFERENCES users(id)
+                                       ON DELETE CASCADE,
+
+                               CONSTRAINT fk_refreshtoken_created_by
+                                   FOREIGN KEY (created_by_id)
+                                       REFERENCES users(id),
+
+                               CONSTRAINT fk_refreshtoken_updated_by
+                                   FOREIGN KEY (updated_by_id)
+                                       REFERENCES users(id)
+);
+
+-- =============================================================================
+-- SEED DATA: ROLES
+-- =============================================================================
+INSERT INTO roles(name)
+VALUES
+    ('ADMIN'),
+    ('MANAGER'),
+    ('USER');
+
+-- =============================================================================
+-- SEED DATA: PERMISSIONS
+-- =============================================================================
+INSERT INTO permissions(name, description)
+VALUES
+    ('USER_READ', 'Read users'),
+    ('USER_CREATE', 'Create users'),
+    ('USER_UPDATE', 'Update users'),
+    ('USER_DELETE', 'Delete users'),
+
+    ('ROLE_READ', 'Read roles'),
+    ('ROLE_CREATE', 'Create roles'),
+    ('ROLE_UPDATE', 'Update roles'),
+    ('ROLE_DELETE', 'Delete roles'),
+
+    ('PRODUCT_READ', 'Read products'),
+    ('PRODUCT_CREATE', 'Create products'),
+    ('PRODUCT_UPDATE', 'Update products'),
+    ('PRODUCT_DELETE', 'Delete products');
+
+-- =============================================================================
+-- SEED DATA: ROLE_PERMISSIONS
+-- =============================================================================
+
+-- ADMIN -> all permissions
+INSERT INTO role_permissions(role_id, permission_id)
+SELECT 1, id
+FROM permissions;
+
+-- MANAGER
+INSERT INTO role_permissions(role_id, permission_id)
+VALUES
+    (2, 9),
+    (2, 10),
+    (2, 11),
+    (2, 12);
+
+-- USER
+INSERT INTO role_permissions(role_id, permission_id)
+VALUES
+    (3, 1),
+    (3, 9);

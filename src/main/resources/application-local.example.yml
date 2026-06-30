@@ -7,5 +7,5 @@ spring:
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         password: YOUR_KEY
-        url: jdbc:mysql://localhost:3306/security_practice?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+        url: jdbc:mysql://localhost:3306/{DB_NAME}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
         username: root
